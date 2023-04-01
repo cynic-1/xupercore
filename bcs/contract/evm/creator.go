@@ -105,12 +105,14 @@ func (i *evmInstance) Exec() error {
 	if IsContractAccount(i.state.ctx.Initiator) {
 		caller, err = ContractAccountToEVMAddress(i.state.ctx.Initiator)
 	} else {
+		// 调用合约的账户地址
 		caller, err = XchainToEVMAddress(i.state.ctx.Initiator)
 	}
 	if err != nil {
 		return err
 	}
 
+	// 部署的合约地址
 	callee, err := ContractNameToEVMAddress(i.ctx.ContractName)
 	if err != nil {
 		return err
@@ -244,8 +246,10 @@ func (i *evmInstance) deployContract() error {
 	var err error
 	if IsContractAccount(i.state.ctx.Initiator) {
 		caller, err = ContractAccountToEVMAddress(i.state.ctx.Initiator)
+		fmt.Printf("我是合约账户，Initiator = %s caller = %s\n", i.state.ctx.Initiator, caller.String())
 	} else {
 		caller, err = XchainToEVMAddress(i.state.ctx.Initiator)
+		fmt.Printf("我不是合约账户，Initiator = %s caller = %s\n", i.state.ctx.Initiator, caller.String())
 	}
 	if err != nil {
 		return err
@@ -255,6 +259,7 @@ func (i *evmInstance) deployContract() error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("contractName = %s callee = %s\n", i.ctx.ContractName, callee.String())
 
 	gas := uint64(contract.MaxLimits.Cpu)
 

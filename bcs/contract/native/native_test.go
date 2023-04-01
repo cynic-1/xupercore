@@ -39,17 +39,17 @@ func compile(th *mock.TestHelper, runtime string) ([]byte, error) {
 }
 
 func TestNative(t *testing.T) {
-
+	// 生成合约配置
 	var contractConfig = &contract.ContractConfig{
-		EnableUpgrade: true,
+		EnableUpgrade: true, //允许更新合约
 		Xkernel: contract.XkernelConfig{
 			Enable: true,
 			Driver: "default",
 		},
-		Native: contract.NativeConfig{
+		Native: contract.NativeConfig{ // 原生合约配置
 			Enable: true,
 			Driver: "native",
-			Docker: contract.NativeDockerConfig{
+			Docker: contract.NativeDockerConfig{ // Docker配置
 				Enable:    true,
 				ImageName: IMAGE_NAME,
 			},
@@ -57,16 +57,19 @@ func TestNative(t *testing.T) {
 		LogDriver: mock.NewMockLogger(),
 	}
 
+	// 一个是本地跑 一个是另起一个容器跑
 	runtimes := []string{RUNTIME_HOST, RUNTIME_DOCKER}
 
 	for _, runtime := range runtimes {
 		if runtime == RUNTIME_DOCKER {
+			// 判断docker是否能够正常使用
 			_, err := exec.Command("docker", "info").CombinedOutput()
 			if err != nil {
 				t.Skip("docker not available")
 			}
 
 			t.Log("pulling image......")
+			// 拉取docker镜像
 			pullResp, errPull := exec.Command("docker", "pull", IMAGE_NAME).CombinedOutput()
 			if errPull != nil {
 				t.Error(err)
@@ -77,15 +80,18 @@ func TestNative(t *testing.T) {
 		} else {
 			contractConfig.Native.Docker.Enable = false
 		}
+		// 部署原生合约
 		t.Run("TestNativeDeploy_"+runtime, func(t *testing.T) {
 			th := mock.NewTestHelper(contractConfig)
 			defer th.Close()
 
+			// 编译出二进制文件
 			bin, err := compile(th, runtime)
 			if err != nil {
 				t.Fatal(err)
 			}
 
+			// 部署合约
 			resp, err := th.Deploy("native", "go", "counter", bin, map[string][]byte{
 				"creator": []byte("icexin"),
 			})
