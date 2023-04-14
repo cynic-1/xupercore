@@ -350,7 +350,6 @@ func (i *evmInstance) encodeDeployInput() ([]byte, error) {
 	if !ok {
 		return nil, fmt.Errorf("missing emvInput")
 	}
-
 	// map 的类型与客户端一致，如果 cli 或者 SDK 对此结构有改动，需要同时修改。
 	args := make(map[string]interface{})
 	if err := json.Unmarshal(argsBytes, &args); err != nil {
@@ -361,13 +360,14 @@ func (i *evmInstance) encodeDeployInput() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("args:", args)
 	input, err := enc.Encode("", args)
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("input", input)
 	evmCode := string(i.code) + hex.EncodeToString(input)
+	fmt.Println("evmCode:", string(i.code))
 	codeBuf, err := hex.DecodeString(evmCode)
 	if err != nil {
 		return nil, err

@@ -3,6 +3,7 @@ package mock
 import (
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"github.com/xuperchain/xupercore/kernel/contract/bridge"
 	"io/ioutil"
 	"math/big"
@@ -154,7 +155,7 @@ func (t *TestHelper) Deploy(module, lang, contractName string, bin []byte, args 
 	return resp, nil
 }
 
-func (t *TestHelper) DeployWithContract(module, lang, accountName string, contractName string, bin []byte, args map[string][]byte) (*contract.Response, error) {
+func (t *TestHelper) DeployWithABI(module, lang, contractName string, bin []byte, abi []byte, args map[string][]byte) (*contract.Response, error) {
 	m := t.Manager()
 	state, err := m.NewStateSandbox(&contract.SandboxConfig{ // 沙盒配置
 		XMReader:   t.State(),    // 沙盒内存状态
@@ -170,7 +171,7 @@ func (t *TestHelper) DeployWithContract(module, lang, accountName string, contra
 		ContractName:   "$contract",
 		State:          state,
 		ResourceLimits: contract.MaxLimits,
-		Initiator:      accountName,
+		Initiator:      ContractAccount,
 	})
 	if err != nil {
 		return nil, err
@@ -183,7 +184,7 @@ func (t *TestHelper) DeployWithContract(module, lang, accountName string, contra
 	descbuf, _ := proto.Marshal(desc)
 
 	argsBuf, _ := json.Marshal(args)
-
+	fmt.Println(string(argsBuf))
 	invokeArgs := map[string][]byte{
 		"account_name":  []byte(ContractAccount),
 		"contract_name": []byte(contractName),
@@ -192,7 +193,7 @@ func (t *TestHelper) DeployWithContract(module, lang, accountName string, contra
 		"init_args":     argsBuf,
 	}
 	if bridge.ContractType(module) == bridge.TypeEvm {
-		invokeArgs["contract_abi"] = args["contract_abi"]
+		invokeArgs["contract_abi"] = abi
 	}
 	// 调用部署合约方法
 	resp, err := ctx.Invoke("deployContract", invokeArgs)
@@ -204,7 +205,6 @@ func (t *TestHelper) DeployWithContract(module, lang, accountName string, contra
 	// 释放资源
 	ctx.Release()
 	t.Commit(state) // 提交
-
 	return resp, nil
 }
 
